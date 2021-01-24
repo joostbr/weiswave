@@ -35,17 +35,17 @@ namespace NinjaTrader.NinjaScript.Indicators
         private Series<double> extreme;
         private Series<int> extremeBar;
         private Series<double> waveVolume;
-		private Series<double> waveVolumeDelta;
-		private Series<double> barVolumeDelta;
+        private Series<double> waveVolumeDelta;
+        private Series<double> barVolumeDelta;
         private ATR atr;
         private int waveId = 0;
         private int startWave;
         private double startPrice;
         private double volume;
-		private double buys;
-		private double sells;
-		private int activeBar;
-       
+        private double buys;
+        private double sells;
+        private int activeBar;
+
 
         protected override void OnStateChange()
         {
@@ -70,21 +70,21 @@ namespace NinjaTrader.NinjaScript.Indicators
                 WaveColor = Brushes.DeepSkyBlue;
                 DownVolColor = Brushes.White;
                 UpVolColor = Brushes.White;
-				DownDeltaColor = Brushes.Magenta;
+                DownDeltaColor = Brushes.Magenta;
                 UpDeltaColor = Brushes.Cyan;
                 VolumeLabelBarSpacing = 30;
-				DeltaLabelBarSpacing = 50;
+                DeltaLabelBarSpacing = 50;
                 WaveLineStyle = DashStyleHelper.Solid;
                 ShowVolumes = true;
                 ShowLines = true;
-				ShowDeltas = true;
-				
-				VolumeTextFont = new Gui.Tools.SimpleFont("Arial", 11);
-				DeltaTextFont = new Gui.Tools.SimpleFont("Arial", 11);
+                ShowDeltas = true;
 
-            }			
+                VolumeTextFont = new Gui.Tools.SimpleFont("Arial", 11);
+                DeltaTextFont = new Gui.Tools.SimpleFont("Arial", 11);
+
+            }
             else if (State == State.Configure)
-            {                
+            {
             }
             else if (State == State.DataLoaded)
             {
@@ -94,23 +94,23 @@ namespace NinjaTrader.NinjaScript.Indicators
                 this.direction = new Series<int>(this, MaximumBarsLookBack.TwoHundredFiftySix);
                 this.extremeBar = new Series<int>(this, MaximumBarsLookBack.TwoHundredFiftySix);
                 this.waveVolume = new Series<double>(this, MaximumBarsLookBack.TwoHundredFiftySix);
-				this.waveVolumeDelta = new Series<double>(this, MaximumBarsLookBack.TwoHundredFiftySix);
-				this.barVolumeDelta = new Series<double>(this, MaximumBarsLookBack.TwoHundredFiftySix);
+                this.waveVolumeDelta = new Series<double>(this, MaximumBarsLookBack.TwoHundredFiftySix);
+                this.barVolumeDelta = new Series<double>(this, MaximumBarsLookBack.TwoHundredFiftySix);
             }
         }
 
-		protected override void OnMarketData(MarketDataEventArgs e)
-		{
-			if(e.MarketDataType == MarketDataType.Last)
-			{
-				if (e.Price >= e.Ask)
-					buys += (Instrument.MasterInstrument.InstrumentType == Cbi.InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume(e.Volume) : e.Volume);
-				else if (e.Price <= e.Bid)
-					sells += (Instrument.MasterInstrument.InstrumentType == Cbi.InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume(e.Volume) : e.Volume);
-			}
-		}
-		
-		private void drawVolumeLabel(String tag, double volume, int barsAgo, double ypos, int yspacing, SolidColorBrush brush)
+        protected override void OnMarketData(MarketDataEventArgs e)
+        {
+            if (e.MarketDataType == MarketDataType.Last)
+            {
+                if (e.Price >= e.Ask)
+                    buys += (Instrument.MasterInstrument.InstrumentType == Cbi.InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume(e.Volume) : e.Volume);
+                else if (e.Price <= e.Bid)
+                    sells += (Instrument.MasterInstrument.InstrumentType == Cbi.InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume(e.Volume) : e.Volume);
+            }
+        }
+
+        private void drawVolumeLabel(String tag, double volume, int barsAgo, double ypos, int yspacing, SolidColorBrush brush)
         {
             double cryptoCompatibleVol = Instrument.MasterInstrument.InstrumentType == InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume((long)volume) : volume;
             String text = "" + cryptoCompatibleVol;
@@ -119,18 +119,19 @@ namespace NinjaTrader.NinjaScript.Indicators
             {
                 text = text.Substring(0, text.Length - 3) + "." + text.Substring(1, 1) + "k";
             }
-			else if (volume < 0 && text.Length >= 5) {
-				text = text.Substring(0, text.Length - 3) + "." + text.Substring(2, 1) + "k";
-			}
+            else if (volume < 0 && text.Length >= 5)
+            {
+                text = text.Substring(0, text.Length - 3) + "." + text.Substring(2, 1) + "k";
+            }
             if (tag.Equals("tempVol"))
             {
                 SolidColorBrush faded = new SolidColorBrush(Color.FromArgb(170, textBrush.Color.R, textBrush.Color.G, textBrush.Color.B));
                 faded.Freeze();
                 textBrush = faded;
-            }			
+            }
             Draw.Text(this, tag, false, text, barsAgo, ypos, yspacing, textBrush, VolumeTextFont, TextAlignment.Center, Brushes.Transparent, Brushes.Transparent, 0);
         }
-		
+
         private void drawVolumeDeltaLabel(String tag, double delta, int barsAgo, double ypos, int yspacing, SolidColorBrush brush)
         {
             double cryptoCompatibleVol = Instrument.MasterInstrument.InstrumentType == InstrumentType.CryptoCurrency ? Core.Globals.ToCryptocurrencyVolume((long)delta) : delta;
@@ -140,22 +141,23 @@ namespace NinjaTrader.NinjaScript.Indicators
             {
                 text = text.Substring(0, text.Length - 3) + "." + text.Substring(1, 1) + "k";
             }
-			else if (delta < 0 && text.Length >= 5) {
-				text = text.Substring(0, text.Length - 3) + "." + text.Substring(2, 1) + "k";
-			}
+            else if (delta < 0 && text.Length >= 5)
+            {
+                text = text.Substring(0, text.Length - 3) + "." + text.Substring(2, 1) + "k";
+            }
             if (tag.Equals("tempVol"))
             {
                 SolidColorBrush faded = new SolidColorBrush(Color.FromArgb(170, textBrush.Color.R, textBrush.Color.G, textBrush.Color.B));
                 faded.Freeze();
                 textBrush = faded;
             }
-			text = "\u0394 "+text;
+            text = "\u0394 " + text;
             Draw.Text(this, tag, false, text, barsAgo, ypos, yspacing, textBrush, DeltaTextFont, TextAlignment.Center, Brushes.Transparent, Brushes.Transparent, 0);
         }
 
         protected override void OnBarUpdate()
         {
-			
+
             if (CurrentBar == 0)
             {
                 close[0] = (High[0] + Low[0]) / 2.0;
@@ -165,108 +167,108 @@ namespace NinjaTrader.NinjaScript.Indicators
                 startWave = 0;
                 startPrice = close[0];
                 waveVolume[0] = 0;
-				waveVolumeDelta[0] = 0;
-				barVolumeDelta[0] = 0;
+                waveVolumeDelta[0] = 0;
+                barVolumeDelta[0] = 0;
                 return;
             }
-			if (CurrentBar != activeBar) // start of new bar
-			{
-				barVolumeDelta[0] = buys - sells;
-				buys = 0;
-				sells = 0;
-				activeBar = CurrentBar;
-				Print(Time[1]+" "+barVolumeDelta[1]+"   "+Volume[1]);
-			
-				//barVolumeDelta[0] = 0;
+            if (CurrentBar != activeBar) // start of new bar
+            {
+                barVolumeDelta[0] = buys - sells;
+                buys = 0;
+                sells = 0;
+                activeBar = CurrentBar;
+                Print(Time[1] + " " + barVolumeDelta[1] + "   " + Volume[1]);
 
-	            double high = Style == SwingStyle.HighLow ? High[1] : Close[1];
-	            double low = Style == SwingStyle.HighLow ? Low[1] : Close[1];
+                //barVolumeDelta[0] = 0;
 
-	            double previousClose = close[1];
+                double high = Style == SwingStyle.HighLow ? High[1] : Close[1];
+                double low = Style == SwingStyle.HighLow ? Low[1] : Close[1];
 
-	            double previousHigh = previousClose + this.atr[1];
-	            double previousLow = previousClose - this.atr[1];
+                double previousClose = close[1];
 
-	            close[0] = high > previousHigh ? high : low < previousLow ? low : previousClose;
-	            direction[0] = close[0] > previousClose ? 1 : close[0] < previousClose ? -1 : direction[1];
+                double previousHigh = previousClose + this.atr[1];
+                double previousLow = previousClose - this.atr[1];
 
-	            bool directionHasChanged = direction[1] != direction[0];
-	            bool up = direction[0] > 0;
-	            bool down = direction[0] < 0;
+                close[0] = high > previousHigh ? high : low < previousLow ? low : previousClose;
+                direction[0] = close[0] > previousClose ? 1 : close[0] < previousClose ? -1 : direction[1];
 
-	            double prevExtreme = directionHasChanged ? close[0] : extreme[1];
-	            extreme[0]    = up && high >= prevExtreme ? high       : down && low <= prevExtreme ? low : prevExtreme;
-	            extremeBar[0] = up && high >= prevExtreme ? CurrentBar-1 : down && low <= prevExtreme ? CurrentBar-1 : extremeBar[1];
+                bool directionHasChanged = direction[1] != direction[0];
+                bool up = direction[0] > 0;
+                bool down = direction[0] < 0;
 
-	            double prevVolume = directionHasChanged ? 0 : waveVolume[1];
-				double prevDelta  = directionHasChanged ? 0 : waveVolumeDelta[1];
-	            if (extremeBar[0] == CurrentBar-1)
-	            {
-					double extraVolume = 0;
-					double extraDelta = 0;
-	                for (int i = CurrentBar-1; i > extremeBar[1]; i--)
-	                {
-	                    extraVolume = Volume[CurrentBar - i] + extraVolume;
-						extraDelta = barVolumeDelta[CurrentBar - i] + extraDelta;
-	                }
-	                waveVolume[0] = prevVolume + extraVolume;
-					waveVolumeDelta[0] = prevDelta + extraDelta;
-	            }
-	            else
-	            {
-	                waveVolume[0] = prevVolume;
-					waveVolumeDelta[0] = prevDelta;
-	            }
+                double prevExtreme = directionHasChanged ? close[0] : extreme[1];
+                extreme[0] = up && high >= prevExtreme ? high : down && low <= prevExtreme ? low : prevExtreme;
+                extremeBar[0] = up && high >= prevExtreme ? CurrentBar - 1 : down && low <= prevExtreme ? CurrentBar - 1 : extremeBar[1];
 
-	            double ypos;
+                double prevVolume = directionHasChanged ? 0 : waveVolume[1];
+                double prevDelta = directionHasChanged ? 0 : waveVolumeDelta[1];
+                if (extremeBar[0] == CurrentBar - 1)
+                {
+                    double extraVolume = 0;
+                    double extraDelta = 0;
+                    for (int i = CurrentBar - 1; i > extremeBar[1]; i--)
+                    {
+                        extraVolume = Volume[CurrentBar - i] + extraVolume;
+                        extraDelta = barVolumeDelta[CurrentBar - i] + extraDelta;
+                    }
+                    waveVolume[0] = prevVolume + extraVolume;
+                    waveVolumeDelta[0] = prevDelta + extraDelta;
+                }
+                else
+                {
+                    waveVolume[0] = prevVolume;
+                    waveVolumeDelta[0] = prevDelta;
+                }
 
-	            if (directionHasChanged)
-	            {
+                double ypos;
 
-	                RemoveDrawObject("temp");
-	                RemoveDrawObject("tempVol");
-					RemoveDrawObject("tempDelta");
+                if (directionHasChanged)
+                {
 
-	                ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[1]] : Low[CurrentBar - extremeBar[1]];
+                    RemoveDrawObject("temp");
+                    RemoveDrawObject("tempVol");
+                    RemoveDrawObject("tempDelta");
 
-	                if (ShowVolumes)
-	                {
-	                    drawVolumeLabel("vol_" + waveId, waveVolume[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[1] < 0 ? DownVolColor : UpVolColor);
-	                }
-	                if (ShowDeltas)
-	                {
-	                    drawVolumeDeltaLabel("delta_" + waveId, waveVolumeDelta[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[1] < 0 ? DownDeltaColor : UpDeltaColor);
-	                }
-	                if (ShowLines)
-	                {
-	                    Draw.Line(this, "wave_" + waveId, true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[1], extreme[1], WaveColor, WaveLineStyle, WaveLineWidth);
-	                }
+                    ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[1]] : Low[CurrentBar - extremeBar[1]];
 
-	                startPrice = extreme[1];
-	                startWave = extremeBar[1];
-	                waveId = waveId + 1;
+                    if (ShowVolumes)
+                    {
+                        drawVolumeLabel("vol_" + waveId, waveVolume[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[1] < 0 ? DownVolColor : UpVolColor);
+                    }
+                    if (ShowDeltas)
+                    {
+                        drawVolumeDeltaLabel("delta_" + waveId, waveVolumeDelta[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[1] < 0 ? DownDeltaColor : UpDeltaColor);
+                    }
+                    if (ShowLines)
+                    {
+                        Draw.Line(this, "wave_" + waveId, true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[1], extreme[1], WaveColor, WaveLineStyle, WaveLineWidth);
+                    }
 
-	            }
-	            else
-	            {
-	                ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[0]] : Low[CurrentBar - extremeBar[0]];
+                    startPrice = extreme[1];
+                    startWave = extremeBar[1];
+                    waveId = waveId + 1;
 
-	                if (ShowVolumes)
-	                {
-	                    drawVolumeLabel("tempVol", waveVolume[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[0] < 0 ? DownVolColor : UpVolColor);
-	                }
-	                if (ShowDeltas)
-	                {
-	                    drawVolumeDeltaLabel("tempDelta" + waveId, waveVolumeDelta[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[0] < 0 ? DownDeltaColor : UpDeltaColor);
-	                }
+                }
+                else
+                {
+                    ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[0]] : Low[CurrentBar - extremeBar[0]];
 
-	                if (ShowLines)
-	                {
-	                    Draw.Line(this, "temp", true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[0], extreme[0], WaveColor, WaveLineStyle, WaveLineWidth);
-	                }
-	            }
+                    if (ShowVolumes)
+                    {
+                        drawVolumeLabel("tempVol", waveVolume[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[0] < 0 ? DownVolColor : UpVolColor);
+                    }
+                    if (ShowDeltas)
+                    {
+                        drawVolumeDeltaLabel("tempDelta" + waveId, waveVolumeDelta[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[0] < 0 ? DownDeltaColor : UpDeltaColor);
+                    }
 
-			}
+                    if (ShowLines)
+                    {
+                        Draw.Line(this, "temp", true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[0], extreme[0], WaveColor, WaveLineStyle, WaveLineWidth);
+                    }
+                }
+
+            }
         }
 
         #region Properties
@@ -280,8 +282,8 @@ namespace NinjaTrader.NinjaScript.Indicators
         [Display(Name = "Swing Style", Description = "Swing style", Order = 2, GroupName = "1. Wave Settings")]
         public SwingStyle Style
         { get; set; }
-		
-		[NinjaScriptProperty]
+
+        [NinjaScriptProperty]
         [Display(Name = "Show Waves", Description = "Show Waves", Order = 3, GroupName = "1. Wave Settings")]
         public bool ShowLines
         {
@@ -295,7 +297,7 @@ namespace NinjaTrader.NinjaScript.Indicators
             get; set;
         }
 
-		[NinjaScriptProperty]
+        [NinjaScriptProperty]
         [Display(Name = "Show Volume Deltas", Description = "Show Volume Deltas", Order = 5, GroupName = "1. Wave Settings")]
         public bool ShowDeltas
         {
@@ -307,8 +309,8 @@ namespace NinjaTrader.NinjaScript.Indicators
         [Display(Name = "Volume Label-Bar Spacing", Description = "Spacing between volume labels and bars", Order = 1, GroupName = "2. Visuals")]
         public int VolumeLabelBarSpacing
         { get; set; }
-		
-		[NinjaScriptProperty]
+
+        [NinjaScriptProperty]
         [Range(1, int.MaxValue)]
         [Display(Name = "Delta Label-Bar Spacing", Description = "Spacing between delta labels and bars", Order = 2, GroupName = "2. Visuals")]
         public int DeltaLabelBarSpacing
@@ -341,13 +343,13 @@ namespace NinjaTrader.NinjaScript.Indicators
             get { return Serialize.BrushToString(WaveColor); }
             set { WaveColor = (SolidColorBrush)Serialize.StringToBrush(value); }
         }
-		
-		[NinjaScriptProperty]
-		[Display(Name = "Volume Text Font", Description = "Represents the text font for the volume values", Order = 6, GroupName = "2. Visuals")]
-		public NinjaTrader.Gui.Tools.SimpleFont VolumeTextFont
-		{
-			get; set;
-		}
+
+        [NinjaScriptProperty]
+        [Display(Name = "Volume Text Font", Description = "Represents the text font for the volume values", Order = 6, GroupName = "2. Visuals")]
+        public NinjaTrader.Gui.Tools.SimpleFont VolumeTextFont
+        {
+            get; set;
+        }
 
         [NinjaScriptProperty]
         [XmlIgnore]
@@ -374,15 +376,15 @@ namespace NinjaTrader.NinjaScript.Indicators
             get { return Serialize.BrushToString(DownVolColor); }
             set { DownVolColor = (SolidColorBrush)Serialize.StringToBrush(value); }
         }
-		
-		[NinjaScriptProperty]
-		[Display(Name = "Delta Text Font", Description = "Represents the text font for the delta values", Order = 9, GroupName = "2. Visuals")]
-		public NinjaTrader.Gui.Tools.SimpleFont DeltaTextFont
-		{
-			get; set;
-		}
 
-		[NinjaScriptProperty]
+        [NinjaScriptProperty]
+        [Display(Name = "Delta Text Font", Description = "Represents the text font for the delta values", Order = 9, GroupName = "2. Visuals")]
+        public NinjaTrader.Gui.Tools.SimpleFont DeltaTextFont
+        {
+            get; set;
+        }
+
+        [NinjaScriptProperty]
         [XmlIgnore]
         [Display(Name = "Volume Delta Color", Description = "Label color for delta in up move", Order = 10, GroupName = "2. Visuals")]
         public SolidColorBrush UpDeltaColor
@@ -407,9 +409,9 @@ namespace NinjaTrader.NinjaScript.Indicators
             get { return Serialize.BrushToString(DownDeltaColor); }
             set { DownDeltaColor = (SolidColorBrush)Serialize.StringToBrush(value); }
         }
-		
-     
-		
+
+
+
         #endregion
 
     }
@@ -429,55 +431,55 @@ namespace JBWeisWave.Base
 
 namespace NinjaTrader.NinjaScript.Indicators
 {
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private JBWeisWave[] cacheJBWeisWave;
-		public JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			return JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
-		}
+    public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
+    {
+        private JBWeisWave[] cacheJBWeisWave;
+        public JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            return JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
+        }
 
-		public JBWeisWave JBWeisWave(ISeries<double> input, int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			if (cacheJBWeisWave != null)
-				for (int idx = 0; idx < cacheJBWeisWave.Length; idx++)
-					if (cacheJBWeisWave[idx] != null && cacheJBWeisWave[idx].Length == length && cacheJBWeisWave[idx].Style == style && cacheJBWeisWave[idx].ShowLines == showLines && cacheJBWeisWave[idx].ShowVolumes == showVolumes && cacheJBWeisWave[idx].ShowDeltas == showDeltas && cacheJBWeisWave[idx].VolumeLabelBarSpacing == volumeLabelBarSpacing && cacheJBWeisWave[idx].DeltaLabelBarSpacing == deltaLabelBarSpacing && cacheJBWeisWave[idx].WaveLineWidth == waveLineWidth && cacheJBWeisWave[idx].WaveLineStyle == waveLineStyle && cacheJBWeisWave[idx].WaveColor == waveColor && cacheJBWeisWave[idx].VolumeTextFont == volumeTextFont && cacheJBWeisWave[idx].UpVolColor == upVolColor && cacheJBWeisWave[idx].DownVolColor == downVolColor && cacheJBWeisWave[idx].DeltaTextFont == deltaTextFont && cacheJBWeisWave[idx].UpDeltaColor == upDeltaColor && cacheJBWeisWave[idx].DownDeltaColor == downDeltaColor && cacheJBWeisWave[idx].EqualsInput(input))
-						return cacheJBWeisWave[idx];
-			return CacheIndicator<JBWeisWave>(new JBWeisWave(){ Length = length, Style = style, ShowLines = showLines, ShowVolumes = showVolumes, ShowDeltas = showDeltas, VolumeLabelBarSpacing = volumeLabelBarSpacing, DeltaLabelBarSpacing = deltaLabelBarSpacing, WaveLineWidth = waveLineWidth, WaveLineStyle = waveLineStyle, WaveColor = waveColor, VolumeTextFont = volumeTextFont, UpVolColor = upVolColor, DownVolColor = downVolColor, DeltaTextFont = deltaTextFont, UpDeltaColor = upDeltaColor, DownDeltaColor = downDeltaColor }, input, ref cacheJBWeisWave);
-		}
-	}
+        public JBWeisWave JBWeisWave(ISeries<double> input, int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            if (cacheJBWeisWave != null)
+                for (int idx = 0; idx < cacheJBWeisWave.Length; idx++)
+                    if (cacheJBWeisWave[idx] != null && cacheJBWeisWave[idx].Length == length && cacheJBWeisWave[idx].Style == style && cacheJBWeisWave[idx].ShowLines == showLines && cacheJBWeisWave[idx].ShowVolumes == showVolumes && cacheJBWeisWave[idx].ShowDeltas == showDeltas && cacheJBWeisWave[idx].VolumeLabelBarSpacing == volumeLabelBarSpacing && cacheJBWeisWave[idx].DeltaLabelBarSpacing == deltaLabelBarSpacing && cacheJBWeisWave[idx].WaveLineWidth == waveLineWidth && cacheJBWeisWave[idx].WaveLineStyle == waveLineStyle && cacheJBWeisWave[idx].WaveColor == waveColor && cacheJBWeisWave[idx].VolumeTextFont == volumeTextFont && cacheJBWeisWave[idx].UpVolColor == upVolColor && cacheJBWeisWave[idx].DownVolColor == downVolColor && cacheJBWeisWave[idx].DeltaTextFont == deltaTextFont && cacheJBWeisWave[idx].UpDeltaColor == upDeltaColor && cacheJBWeisWave[idx].DownDeltaColor == downDeltaColor && cacheJBWeisWave[idx].EqualsInput(input))
+                        return cacheJBWeisWave[idx];
+            return CacheIndicator<JBWeisWave>(new JBWeisWave() { Length = length, Style = style, ShowLines = showLines, ShowVolumes = showVolumes, ShowDeltas = showDeltas, VolumeLabelBarSpacing = volumeLabelBarSpacing, DeltaLabelBarSpacing = deltaLabelBarSpacing, WaveLineWidth = waveLineWidth, WaveLineStyle = waveLineStyle, WaveColor = waveColor, VolumeTextFont = volumeTextFont, UpVolColor = upVolColor, DownVolColor = downVolColor, DeltaTextFont = deltaTextFont, UpDeltaColor = upDeltaColor, DownDeltaColor = downDeltaColor }, input, ref cacheJBWeisWave);
+        }
+    }
 }
 
 namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			return indicator.JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
-		}
+    public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
+    {
+        public Indicators.JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            return indicator.JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
+        }
 
-		public Indicators.JBWeisWave JBWeisWave(ISeries<double> input , int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			return indicator.JBWeisWave(input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
-		}
-	}
+        public Indicators.JBWeisWave JBWeisWave(ISeries<double> input, int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            return indicator.JBWeisWave(input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
+        }
+    }
 }
 
 namespace NinjaTrader.NinjaScript.Strategies
 {
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			return indicator.JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
-		}
+    public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
+    {
+        public Indicators.JBWeisWave JBWeisWave(int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            return indicator.JBWeisWave(Input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
+        }
 
-		public Indicators.JBWeisWave JBWeisWave(ISeries<double> input , int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
-		{
-			return indicator.JBWeisWave(input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
-		}
-	}
+        public Indicators.JBWeisWave JBWeisWave(ISeries<double> input, int length, SwingStyle style, bool showLines, bool showVolumes, bool showDeltas, int volumeLabelBarSpacing, int deltaLabelBarSpacing, int waveLineWidth, DashStyleHelper waveLineStyle, SolidColorBrush waveColor, NinjaTrader.Gui.Tools.SimpleFont volumeTextFont, SolidColorBrush upVolColor, SolidColorBrush downVolColor, NinjaTrader.Gui.Tools.SimpleFont deltaTextFont, SolidColorBrush upDeltaColor, SolidColorBrush downDeltaColor)
+        {
+            return indicator.JBWeisWave(input, length, style, showLines, showVolumes, showDeltas, volumeLabelBarSpacing, deltaLabelBarSpacing, waveLineWidth, waveLineStyle, waveColor, volumeTextFont, upVolColor, downVolColor, deltaTextFont, upDeltaColor, downDeltaColor);
+        }
+    }
 }
 
 #endregion
