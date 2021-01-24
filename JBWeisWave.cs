@@ -44,7 +44,6 @@ namespace NinjaTrader.NinjaScript.Indicators
         private double volume;
         private double buys;
         private double sells;
-        private int activeBar;
 
 
         protected override void OnStateChange()
@@ -85,6 +84,14 @@ namespace NinjaTrader.NinjaScript.Indicators
             }
             else if (State == State.Configure)
             {
+            }
+            else if (State == State.Historical)
+            {
+                if (ShowDeltas && !Bars.IsTickReplay)
+                {
+                    Draw.TextFixed(this, "NinjaScriptInfo", "JBWeisWave needs tick replay enabled on the data series when using delta", TextPosition.BottomRight);
+                    Log(string.Format(NinjaTrader.Custom.Resource.NinjaScriptOnBarCloseError, Name), LogLevel.Error);
+                }
             }
             else if (State == State.DataLoaded)
             {
@@ -171,104 +178,101 @@ namespace NinjaTrader.NinjaScript.Indicators
                 barVolumeDelta[0] = 0;
                 return;
             }
-            if (CurrentBar != activeBar) // start of new bar
+
+            barVolumeDelta[0] = buys - sells;
+            buys = 0;
+            sells = 0;
+
+            //Print(Time[0]+" "+barVolumeDelta[0]+"   "+Volume[0]);
+
+            double high = Style == SwingStyle.HighLow ? High[0] : Close[0];
+            double low = Style == SwingStyle.HighLow ? Low[0] : Close[0];
+
+            double previousClose = close[1];
+
+            double previousHigh = previousClose + this.atr[0];
+            double previousLow = previousClose - this.atr[0];
+
+            close[0] = high > previousHigh ? high : low < previousLow ? low : previousClose;
+            direction[0] = close[0] > previousClose ? 1 : close[0] < previousClose ? -1 : direction[1];
+
+            bool directionHasChanged = direction[1] != direction[0];
+            bool up = direction[0] > 0;
+            bool down = direction[0] < 0;
+
+            double prevExtreme = directionHasChanged ? close[0] : extreme[1];
+            extreme[0] = up && high >= prevExtreme ? high : down && low <= prevExtreme ? low : prevExtreme;
+            extremeBar[0] = up && high >= prevExtreme ? CurrentBar : down && low <= prevExtreme ? CurrentBar : extremeBar[1];
+
+            double prevVolume = directionHasChanged ? 0 : waveVolume[1];
+            double prevDelta = directionHasChanged ? 0 : waveVolumeDelta[1];
+            if (extremeBar[0] == CurrentBar)
             {
-                barVolumeDelta[0] = buys - sells;
-                buys = 0;
-                sells = 0;
-                activeBar = CurrentBar;
-                Print(Time[1] + " " + barVolumeDelta[1] + "   " + Volume[1]);
-
-                //barVolumeDelta[0] = 0;
-
-                double high = Style == SwingStyle.HighLow ? High[1] : Close[1];
-                double low = Style == SwingStyle.HighLow ? Low[1] : Close[1];
-
-                double previousClose = close[1];
-
-                double previousHigh = previousClose + this.atr[1];
-                double previousLow = previousClose - this.atr[1];
-
-                close[0] = high > previousHigh ? high : low < previousLow ? low : previousClose;
-                direction[0] = close[0] > previousClose ? 1 : close[0] < previousClose ? -1 : direction[1];
-
-                bool directionHasChanged = direction[1] != direction[0];
-                bool up = direction[0] > 0;
-                bool down = direction[0] < 0;
-
-                double prevExtreme = directionHasChanged ? close[0] : extreme[1];
-                extreme[0] = up && high >= prevExtreme ? high : down && low <= prevExtreme ? low : prevExtreme;
-                extremeBar[0] = up && high >= prevExtreme ? CurrentBar - 1 : down && low <= prevExtreme ? CurrentBar - 1 : extremeBar[1];
-
-                double prevVolume = directionHasChanged ? 0 : waveVolume[1];
-                double prevDelta = directionHasChanged ? 0 : waveVolumeDelta[1];
-                if (extremeBar[0] == CurrentBar - 1)
+                double extraVolume = 0;
+                double extraDelta = 0;
+                for (int i = CurrentBar; i > extremeBar[1]; i--)
                 {
-                    double extraVolume = 0;
-                    double extraDelta = 0;
-                    for (int i = CurrentBar - 1; i > extremeBar[1]; i--)
-                    {
-                        extraVolume = Volume[CurrentBar - i] + extraVolume;
-                        extraDelta = barVolumeDelta[CurrentBar - i] + extraDelta;
-                    }
-                    waveVolume[0] = prevVolume + extraVolume;
-                    waveVolumeDelta[0] = prevDelta + extraDelta;
+                    extraVolume = Volume[CurrentBar - i] + extraVolume;
+                    extraDelta = barVolumeDelta[CurrentBar - i] + extraDelta;
                 }
-                else
+                waveVolume[0] = prevVolume + extraVolume;
+                waveVolumeDelta[0] = prevDelta + extraDelta;
+            }
+            else
+            {
+                waveVolume[0] = prevVolume;
+                waveVolumeDelta[0] = prevDelta;
+            }
+
+            double ypos;
+
+            if (directionHasChanged)
+            {
+
+                RemoveDrawObject("temp");
+                RemoveDrawObject("tempVol");
+                RemoveDrawObject("tempDelta");
+
+                ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[1]] : Low[CurrentBar - extremeBar[1]];
+
+                if (ShowVolumes)
                 {
-                    waveVolume[0] = prevVolume;
-                    waveVolumeDelta[0] = prevDelta;
+                    drawVolumeLabel("vol_" + waveId, waveVolume[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[1] < 0 ? DownVolColor : UpVolColor);
+                }
+                if (ShowDeltas)
+                {
+                    drawVolumeDeltaLabel("delta_" + waveId, waveVolumeDelta[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[1] < 0 ? DownDeltaColor : UpDeltaColor);
+                }
+                if (ShowLines)
+                {
+                    Draw.Line(this, "wave_" + waveId, true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[1], extreme[1], WaveColor, WaveLineStyle, WaveLineWidth);
                 }
 
-                double ypos;
-
-                if (directionHasChanged)
-                {
-
-                    RemoveDrawObject("temp");
-                    RemoveDrawObject("tempVol");
-                    RemoveDrawObject("tempDelta");
-
-                    ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[1]] : Low[CurrentBar - extremeBar[1]];
-
-                    if (ShowVolumes)
-                    {
-                        drawVolumeLabel("vol_" + waveId, waveVolume[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[1] < 0 ? DownVolColor : UpVolColor);
-                    }
-                    if (ShowDeltas)
-                    {
-                        drawVolumeDeltaLabel("delta_" + waveId, waveVolumeDelta[1], CurrentBar - extremeBar[1], ypos, direction[1] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[1] < 0 ? DownDeltaColor : UpDeltaColor);
-                    }
-                    if (ShowLines)
-                    {
-                        Draw.Line(this, "wave_" + waveId, true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[1], extreme[1], WaveColor, WaveLineStyle, WaveLineWidth);
-                    }
-
-                    startPrice = extreme[1];
-                    startWave = extremeBar[1];
-                    waveId = waveId + 1;
-
-                }
-                else
-                {
-                    ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[0]] : Low[CurrentBar - extremeBar[0]];
-
-                    if (ShowVolumes)
-                    {
-                        drawVolumeLabel("tempVol", waveVolume[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[0] < 0 ? DownVolColor : UpVolColor);
-                    }
-                    if (ShowDeltas)
-                    {
-                        drawVolumeDeltaLabel("tempDelta" + waveId, waveVolumeDelta[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[0] < 0 ? DownDeltaColor : UpDeltaColor);
-                    }
-
-                    if (ShowLines)
-                    {
-                        Draw.Line(this, "temp", true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[0], extreme[0], WaveColor, WaveLineStyle, WaveLineWidth);
-                    }
-                }
+                startPrice = extreme[1];
+                startWave = extremeBar[1];
+                waveId = waveId + 1;
 
             }
+            else
+            {
+                ypos = direction[1] == 1 ? High[CurrentBar - extremeBar[0]] : Low[CurrentBar - extremeBar[0]];
+
+                if (ShowVolumes)
+                {
+                    drawVolumeLabel("tempVol", waveVolume[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -VolumeLabelBarSpacing : VolumeLabelBarSpacing, direction[0] < 0 ? DownVolColor : UpVolColor);
+                }
+                if (ShowDeltas)
+                {
+                    drawVolumeDeltaLabel("tempDelta" + waveId, waveVolumeDelta[0], CurrentBar - extremeBar[0], ypos, direction[0] < 0 ? -DeltaLabelBarSpacing : DeltaLabelBarSpacing, waveVolumeDelta[0] < 0 ? DownDeltaColor : UpDeltaColor);
+                }
+
+                if (ShowLines)
+                {
+                    Draw.Line(this, "temp", true, CurrentBar - startWave, startPrice, CurrentBar - extremeBar[0], extreme[0], WaveColor, WaveLineStyle, WaveLineWidth);
+                }
+            }
+
+
         }
 
         #region Properties
